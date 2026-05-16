@@ -1,0 +1,21 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific
+/public/images/products/*
+!/public/images/products/.gitkeep
+/public/images/uploads/*
+!/public/images/uploads/.gitkeep
+
+# Database backups or temp files
+*.sql.gz
+/scratch/
