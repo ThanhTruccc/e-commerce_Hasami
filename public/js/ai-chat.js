@@ -20,31 +20,31 @@ function initAIChat() {
     // Load Chat History from Server
     function loadChatHistory() {
         aiChatMessages.innerHTML = '<div class="text-center py-3 text-muted"><span class="spinner-border spinner-border-sm me-1"></span> Đang tải lịch sử tư vấn...</div>';
-        
+
         fetch(`${APP_URL}/ai/history`)
-        .then(response => response.json())
-        .then(data => {
-            aiChatMessages.innerHTML = `
+            .then(response => response.json())
+            .then(data => {
+                aiChatMessages.innerHTML = `
                 <div class="ai-msg ai-msg-bot">
                     Chào bạn! Mình là trợ lý AI của Hasami. Bạn cần tư vấn về sản phẩm hay cách chăm sóc da hôm nay?
                 </div>
             `;
-            if (data.status === 'success' && data.history && data.history.length > 0) {
-                data.history.forEach(msg => {
-                    appendMessage(msg.sender, msg.message, false);
-                });
-            }
-            scrollToBottom();
-        })
-        .catch(error => {
-            console.error('Error loading history:', error);
-            aiChatMessages.innerHTML = `
+                if (data.status === 'success' && data.history && data.history.length > 0) {
+                    data.history.forEach(msg => {
+                        appendMessage(msg.sender, msg.message, false);
+                    });
+                }
+                scrollToBottom();
+            })
+            .catch(error => {
+                console.error('Error loading history:', error);
+                aiChatMessages.innerHTML = `
                 <div class="ai-msg ai-msg-bot">
                     Chào bạn! Mình là trợ lý AI của Hasami. Bạn cần tư vấn về sản phẩm hay cách chăm sóc da hôm nay?
                 </div>
             `;
-            scrollToBottom();
-        });
+                scrollToBottom();
+            });
     }
 
     // Toggle Chat Window
@@ -64,6 +64,7 @@ function initAIChat() {
         });
     }
 
+
     // Helper to format Markdown to HTML safely
     function formatMarkdown(text) {
         // Escape HTML to prevent XSS
@@ -73,13 +74,13 @@ function initAIChat() {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
-        
+
         // Bold: **text**
         escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        
+
         // Italic: *text*
         escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
+
         // Bullet points: - item or * item
         let lines = escaped.split('\n');
         let inList = false;
@@ -104,10 +105,58 @@ function initAIChat() {
             lines[lines.length - 1] += '</ul>';
         }
         escaped = lines.join('\n');
-        
+
         // Convert newlines to <br>
         escaped = escaped.replace(/\n/g, '<br>');
-        
+
+        return escaped;
+    }
+
+
+    // Helper to format Markdown to HTML safely
+    function formatMarkdown(text) {
+        // Escape HTML to prevent XSS
+        let escaped = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+        // Bold: **text**
+        escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Italic: *text*
+        escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // Bullet points: - item or * item
+        let lines = escaped.split('\n');
+        let inList = false;
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].trim();
+            if (line.startsWith('- ') || line.startsWith('* ')) {
+                let content = line.substring(2);
+                if (!inList) {
+                    lines[i] = '<ul class="ps-3 mb-2"><li>' + content + '</li>';
+                    inList = true;
+                } else {
+                    lines[i] = '<li>' + content + '</li>';
+                }
+            } else {
+                if (inList) {
+                    lines[i] = '</ul>' + lines[i];
+                    inList = false;
+                }
+            }
+        }
+        if (inList) {
+            lines[lines.length - 1] += '</ul>';
+        }
+        escaped = lines.join('\n');
+
+        // Convert newlines to <br>
+        escaped = escaped.replace(/\n/g, '<br>');
+
         return escaped;
     }
 
@@ -130,20 +179,20 @@ function initAIChat() {
             },
             body: JSON.stringify({ message: text })
         })
-        .then(response => response.json())
-        .then(data => {
-            hideTyping(typingId);
-            if (data.status === 'success') {
-                appendMessage('bot', data.reply);
-            } else {
-                appendMessage('bot', 'Xin lỗi, mình đang gặp chút trục trặc. Bạn thử lại sau nhé!');
-            }
-        })
-        .catch(error => {
-            hideTyping(typingId);
-            console.error('Error:', error);
-            appendMessage('bot', 'Không thể kết nối với máy chủ AI.');
-        });
+            .then(response => response.json())
+            .then(data => {
+                hideTyping(typingId);
+                if (data.status === 'success') {
+                    appendMessage('bot', data.reply);
+                } else {
+                    appendMessage('bot', 'Xin lỗi, mình đang gặp chút trục trặc. Bạn thử lại sau nhé!');
+                }
+            })
+            .catch(error => {
+                hideTyping(typingId);
+                console.error('Error:', error);
+                appendMessage('bot', 'Không thể kết nối với máy chủ AI.');
+            });
     }
 
     if (aiSendBtn) {
@@ -152,7 +201,7 @@ function initAIChat() {
             sendMessage(aiInput.value);
         });
     }
-    
+
     if (aiInput) {
         aiInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage(aiInput.value);
