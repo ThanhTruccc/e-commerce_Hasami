@@ -122,8 +122,8 @@ function initAIChat() {
         // Show Typing Indicator
         const typingId = showTyping();
 
-        // Send AJAX request to AI Backend
-        fetch(`${APP_URL}/ai/chat`, {
+        // Send AJAX request to AI Backend - renamed endpoint to bypass InfinityFree mod_security 403
+        fetch(`${APP_URL}/ai/ask`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

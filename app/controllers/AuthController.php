@@ -18,7 +18,7 @@ class AuthController extends Controller {
             $user      = $userModel->login($email, $password);
 
             if ($user) {
-                session_regenerate_id(true);
+                // session_regenerate_id(true); // Gây lỗi mất session trên InfinityFree
                 $sessionKey = ($user['role'] === 'admin') ? 'admin_auth' : 'user_auth';
                 
                 $_SESSION[$sessionKey] = [

@@ -51,9 +51,9 @@
         </nav>
 
         <div class="sidebar-user">
-            <div class="sidebar-user-avatar"><?= mb_substr($_SESSION['user_name'] ?? 'A', 0, 1) ?></div>
+            <div class="sidebar-user-avatar"><?= mb_substr($_SESSION['admin_auth']['name'] ?? 'A', 0, 1) ?></div>
             <div class="sidebar-user-info">
-                <div class="sidebar-user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? '') ?></div>
+                <div class="sidebar-user-name"><?= htmlspecialchars($_SESSION['admin_auth']['name'] ?? 'Admin') ?></div>
                 <div class="sidebar-user-role">Administrator</div>
             </div>
         </div>

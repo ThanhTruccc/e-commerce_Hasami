@@ -80,29 +80,33 @@ class ContentBasedFilter {
         // ── 1. Skin Type Match ────────────────────────────────
         if (!empty($userProfile['skin_type'])) {
             $skinTypes = json_decode($product['skin_types'] ?? '[]', true);
-            if (in_array($userProfile['skin_type'], $skinTypes)) {
-                $score += $this->wSkinType * 1.0;
-            } elseif (in_array('normal', $skinTypes)) {
+            if (in_array($userProfile['skin_type'], $skinTypes)) {// Kiểm tra xem loại da của người dùng hiện tại có 
+                                                                    // nằm trong mảng các loại da phù hợp của sản phẩm hay không. 
+                $score += $this->wSkinType * 1.0; // Nhận giá trị 1.0 (nhân với trọng số wSkinType)
+            } elseif (in_array('normal', $skinTypes)) {// Kiểm tra nếu sản phẩm phù hợp với da thường
                 // Sản phẩm phù hợp tất cả loại da → cộng điểm nhỏ hơn
-                $score += $this->wSkinType * 0.5;
+                $score += $this->wSkinType * 0.5; // cộng điểm ít hơn
             }
+            // Trường hợp không thuộc cả 2 trên sẽ nhận giá trị 0.0 (không cộng điểm)
         }
 
         // ── 2. Category Match ─────────────────────────────────
         if (!empty($userProfile['preferred_category_id'])) {
             if ((int)$product['category_id'] === (int)$userProfile['preferred_category_id']) {
-                $score += $this->wCategory * 1.0;
+                $score += $this->wCategory * 1.0; // Khớp danh mục trực tiếp → Nhận giá trị 1.0
             } elseif ((int)($product['parent_category_id'] ?? 0) === (int)$userProfile['preferred_category_id']) {
-                $score += $this->wCategory * 0.5;
+                $score += $this->wCategory * 0.5; // Khớp danh mục cha (cùng nhóm lớn) → Nhận giá trị 0.5
             }
         } else {
-            // Không có preference → không phạt
-            $score += $this->wCategory * 0.5;
+            // Không có preference (Người dùng mới chưa có dữ liệu danh mục ưa thích) → Không phạt sản phẩm
+            $score += $this->wCategory * 0.5; // Tự động nhận hệ số trung bình 0.5
         }
 
         // ── 3. Price Score (Gaussian proximity) ───────────────
-        $price    = (float)$product['sale_price'] ?: (float)$product['price'];
+        $price    = (float)$product['sale_price'] ?: (float)$product['price'];// Giá thực tế (sale nếu có)
+        // Ngưỡng dưới (0 nếu chưa thiết lập)
         $minPref  = (float)($userProfile['price_min'] ?? 0);
+        // Ngưỡng trên (hoặc giá cao nhất trong DB)
         $maxPref  = (float)($userProfile['price_max'] ?? $maxPrice);
 
         if ($minPref <= $price && $price <= $maxPref) {

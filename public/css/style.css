@@ -1,5 +1,5 @@
 /* ============================================================
-   GLOWVIET - CUSTOM CSS
+   HASAMI - CUSTOM CSS
    Font: Outfit (Google Fonts) + Playfair Display
    Theme: Light/Glassmorphism với accent gradient
    ============================================================ */
@@ -484,7 +484,7 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; }
 }
 .product-card:hover .product-actions { opacity: 1; transform: translateX(0); }
 
-.btn-wishlist, .btn-quickview {
+.btn-wishlist, .btn-quickview, .btn-quick-cart {
     width: 34px; height: 34px;
     border-radius: 50%;
     background: white;
@@ -498,6 +498,7 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; }
 }
 .btn-wishlist:hover, .btn-wishlist.active { background: var(--primary); color: white; }
 .btn-quickview:hover { background: var(--secondary); color: white; }
+.btn-quick-cart:hover { background: var(--success); color: white; }
 
 .product-info { padding: 14px; flex: 1; display: flex; flex-direction: column; }
 .product-brand { font-size: .75rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: .5px; }
@@ -1038,4 +1039,125 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; }
 @keyframes quizFadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── FLASH SALE STYLING ───────────────────────────────────── */
+.flashsale-section {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFF5F7 100%);
+    border-radius: 24px;
+    padding: 40px 30px;
+    box-shadow: 0 10px 40px rgba(233,30,140,0.05);
+    margin-bottom: 50px;
+    border: 1px solid rgba(233,30,140,0.08);
+}
+
+.flashsale-header {
+    background: linear-gradient(90deg, #E91E8C 0%, #FF6B9D 100%);
+    border-radius: 16px;
+    padding: 20px 25px;
+    color: white;
+    box-shadow: 0 8px 24px rgba(233,30,140,0.2);
+}
+
+.flashsale-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.flashsale-fire {
+    animation: flamePulse 1.2s infinite alternate;
+}
+
+@keyframes flamePulse {
+    0% { transform: scale(1); opacity: 0.9; }
+    100% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 5px #FFF); }
+}
+
+.countdown-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+}
+
+.countdown-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+.countdown-time {
+    background: rgba(0, 0, 0, 0.25);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    min-width: 40px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.countdown-colon {
+    font-size: 1.1rem;
+    animation: blinkColon 1s infinite;
+}
+
+@keyframes blinkColon {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.flashsale-card {
+    transition: var(--transition);
+    height: 100%;
+}
+
+.flashsale-card:hover {
+    transform: translateY(-5px);
+}
+
+.badge-discount {
+    background: linear-gradient(135deg, #FF0844 0%, #FFB199 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 50px;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 5;
+    box-shadow: 0 4px 10px rgba(255,8,68,0.25);
+}
+
+.flashsale-progress-container {
+    margin-top: 15px;
+}
+
+.flashsale-progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+.flashsale-progress-bar {
+    height: 8px;
+    background-color: #E5E7EB;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.flashsale-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FF0844 0%, #FFB199 100%);
+    border-radius: 10px;
 }

@@ -1,6 +1,5 @@
-Options -Indexes -MultiViews +FollowSymLinks
 RewriteEngine On
-RewriteBase /manguonmo/public/
+RewriteBase /public/
 
 # Nếu là file hoặc thư mục thật thì truy cập trực tiếp
 RewriteCond %{REQUEST_FILENAME} !-f

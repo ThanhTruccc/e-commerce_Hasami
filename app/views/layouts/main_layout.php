@@ -265,6 +265,6 @@ if ($flash) {
     </script>
     <!-- Custom JS -->
     <script src="<?= APP_URL ?>/js/main.js?v=<?= time() ?>"></script>
-    <script src="<?= APP_URL ?>/js/ai-chat.js?v=<?= time() ?>"></script>
+    <script src="<?= APP_URL ?>/js/ai-bot.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -158,7 +158,8 @@ users ─────────────── orders ── order_details 
   ├── carts ─────────── products              (parent_id)
   ├── reviews ────────── products
   ├── wishlists ──────── products
-  └── user_behavior ─── products ← AI INPUT
+  ├── user_behavior ─── products ← AI INPUT
+  └── ai_chat_history ── (Lịch sử tư vấn)
 ```
 
 ---
@@ -210,6 +211,8 @@ User đặt hàng
 | `/admin/products` | AdminController | products |
 | `/admin/orders` | AdminController | orders |
 | `/wishlist/toggle` | WishlistController | toggle |
+| `/ai/chat` | AIController | chat |
+| `/ai/history` | AIController | history |
 
 ---
 
@@ -244,6 +247,8 @@ User đặt hàng
 - [x] Hybrid Fusion
 - [x] Explainable AI (hiển thị lý do gợi ý)
 - [x] AJAX filter real-time
+- [x] AI Chatbot tư vấn sản phẩm thông minh
+- [x] Lưu trữ và hiển thị lịch sử trò chuyện AI (Database)
 
 ---
 

@@ -76,6 +76,11 @@ class OrderController extends Controller {
 
         $cartModel->clearCart($userId);
         
+        // Gửi email xác nhận đặt hàng thành công kèm tư vấn loại da cá nhân hóa
+        require_once CORE_PATH . '/MailService.php';
+        $user = $this->model('User')->findById($userId);
+        MailService::sendOrderConfirmation($orderId, $user, $cartData['items'], $shipping, (float)$discount, $paymentMethod);
+        
         if ($paymentMethod === 'online') {
             require_once CORE_PATH . '/Payment/VNPay.php';
             $paymentUrl = VNPay::createPaymentUrl([

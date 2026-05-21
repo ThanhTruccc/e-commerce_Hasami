@@ -1,14 +1,16 @@
 -- ============================================================
---  DATABASE SCHEMA - Website Bán Mỹ Phẩm GlowViet
+--  DATABASE SCHEMA - Website Bán Mỹ Phẩm
 --  Tạo bởi: Senior Full-Stack Developer
 --  Phiên bản: 1.0
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS manguonmo_db
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+-- CREATE DATABASE IF NOT EXISTS manguonmo_db
+--   CHARACTER SET utf8mb4
+--   COLLATE utf8mb4_unicode_ci;
 
-USE manguonmo_db;
+-- USE manguonmo_db;
+
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- ─────────────────────────────────────────────────────────────
 --  1. BẢNG DANH MỤC (categories)
@@ -25,7 +27,7 @@ CREATE TABLE IF NOT EXISTS categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
     INDEX idx_slug (slug),
     INDEX idx_parent (parent_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  2. BẢNG SẢN PHẨM (products)
@@ -58,7 +60,7 @@ CREATE TABLE IF NOT EXISTS products (
     INDEX idx_price      (price),
     INDEX idx_status     (status),
     FULLTEXT idx_ft_search (name, brand, ingredients, description)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  3. BẢNG NGƯỜI DÙNG (users)
@@ -79,7 +81,7 @@ CREATE TABLE IF NOT EXISTS users (
 
     INDEX idx_email (email),
     INDEX idx_role  (role)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  4. BẢNG GIỎ HÀNG (carts)
@@ -95,7 +97,26 @@ CREATE TABLE IF NOT EXISTS carts (
     FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     UNIQUE KEY uq_cart_item (user_id, product_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────
+--  4.5. BẢNG MÃ GIẢM GIÁ (coupons)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS coupons (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code            VARCHAR(50)    NOT NULL UNIQUE,
+    type            ENUM('percent','fixed') DEFAULT 'percent',
+    value           DECIMAL(10,2)  NOT NULL,
+    min_order       DECIMAL(12,2)  DEFAULT 0,
+    max_uses        INT UNSIGNED   DEFAULT 100,
+    used_count      INT UNSIGNED   DEFAULT 0,
+    expires_at      DATE           NULL,
+    is_active       TINYINT(1)     DEFAULT 1,
+    created_at      TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_code   (code),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  5. BẢNG ĐƠN HÀNG (orders)
@@ -107,7 +128,8 @@ CREATE TABLE IF NOT EXISTS orders (
     total_amount    DECIMAL(12,2)  NOT NULL,
     discount_amount DECIMAL(12,2)  DEFAULT 0,
     final_amount    DECIMAL(12,2)  NOT NULL,
-    payment_method  ENUM('cod')    DEFAULT 'cod',
+    payment_method  ENUM('cod','online') DEFAULT 'cod',
+    payment_status  ENUM('unpaid','paid') DEFAULT 'unpaid',
     status          ENUM('pending','confirmed','shipping','delivered','cancelled') DEFAULT 'pending',
     shipping_name   VARCHAR(100)   NOT NULL,
     shipping_phone  VARCHAR(15)    NOT NULL,
@@ -120,7 +142,7 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE SET NULL,
     INDEX idx_user   (user_id),
     INDEX idx_status (status)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  6. BẢNG CHI TIẾT ĐƠN HÀNG (order_details)
@@ -137,7 +159,7 @@ CREATE TABLE IF NOT EXISTS order_details (
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
     INDEX idx_order   (order_id),
     INDEX idx_product (product_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  7. BẢNG ĐÁNH GIÁ (reviews)
@@ -157,7 +179,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     UNIQUE KEY uq_review (product_id, user_id),
     INDEX idx_product (product_id),
     INDEX idx_rating  (rating)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  8. BẢNG HÀNH VI NGƯỜI DÙNG (user_behavior) ← AI Input
@@ -182,7 +204,7 @@ CREATE TABLE IF NOT EXISTS user_behavior (
     INDEX idx_user_product (user_id, product_id),
     INDEX idx_action       (action),
     INDEX idx_created      (created_at)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  9. BẢNG WISHLIST (wishlists)
@@ -196,38 +218,19 @@ CREATE TABLE IF NOT EXISTS wishlists (
     FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     UNIQUE KEY uq_wishlist (user_id, product_id)
-) ENGINE=InnoDB;
-
--- ─────────────────────────────────────────────────────────────
---  10. BẢNG MÃ GIẢM GIÁ (coupons)
--- ─────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS coupons (
-    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    code            VARCHAR(50)    NOT NULL UNIQUE,
-    type            ENUM('percent','fixed') DEFAULT 'percent',
-    value           DECIMAL(10,2)  NOT NULL,
-    min_order       DECIMAL(12,2)  DEFAULT 0,
-    max_uses        INT UNSIGNED   DEFAULT 100,
-    used_count      INT UNSIGNED   DEFAULT 0,
-    expires_at      DATE           NULL,
-    is_active       TINYINT(1)     DEFAULT 1,
-    created_at      TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
-
-    INDEX idx_code   (code),
-    INDEX idx_active (is_active)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ─────────────────────────────────────────────────────────────
 --  DỮ LIỆU MẪU
 -- ─────────────────────────────────────────────────────────────
 
 -- Danh mục
-INSERT INTO categories (name, slug, description) VALUES
+INSERT IGNORE INTO categories (name, slug, description) VALUES
 ('Skincare', 'skincare', 'Các sản phẩm chăm sóc da'),
 ('Makeup', 'makeup', 'Trang điểm'),
 ('Chăm Sóc Cá Nhân', 'personal-care', 'Dầu gội, sữa tắm...');
 
-INSERT INTO categories (name, slug, parent_id) VALUES
+INSERT IGNORE INTO categories (name, slug, parent_id) VALUES
 ('Sữa Rửa Mặt', 'sua-rua-mat', 1),
 ('Toner', 'toner', 1),
 ('Serum', 'serum', 1),
@@ -237,15 +240,15 @@ INSERT INTO categories (name, slug, parent_id) VALUES
 ('Mascara', 'mascara', 2);
 
 -- Admin
-INSERT INTO users (name, email, password, role, skin_type) VALUES
-('Admin GlowViet', 'admin@glowviet.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'normal'),
+INSERT IGNORE INTO users (name, email, password, role, skin_type) VALUES
+('Admin Hasami', 'admin@hasami.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'normal'),
 ('Nguyễn Thị Lan', 'lan@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'oily'),
 ('Trần Minh Châu', 'chau@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'dry'),
 ('Lê Thị Hoa', 'hoa@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'combination');
 -- Mật khẩu mẫu: "password"
 
 -- Sản phẩm mẫu
-INSERT INTO products (category_id, name, slug, brand, price, sale_price, stock, image, description, ingredients, skin_types, featured) VALUES
+INSERT IGNORE INTO products (category_id, name, slug, brand, price, sale_price, stock, image, description, ingredients, skin_types, featured) VALUES
 (4, 'Sữa Rửa Mặt CeraVe Hydrating', 'cerave-hydrating-cleanser', 'CeraVe', 320000, 289000, 150,
  'cerave_cleanser.jpg',
  'Sữa rửa mặt dịu nhẹ không gây khô da, duy trì hàng rào bảo vệ da tự nhiên.',
@@ -315,3 +318,21 @@ INSERT INTO reviews (product_id, user_id, rating, title, comment, is_verified) V
 (2, 3, 4, 'Mùi hơi nặng', 'Kiểm soát dầu tốt nhưng mùi không thích.', 1),
 (3, 4, 5, 'BHA tốt nhất', 'Da thông thoáng hơn rõ rệt sau 2 tuần.', 1),
 (8, 4, 5, 'Serum giá rẻ chất lượng tốt', 'Dùng 1 tháng lỗ chân lông nhỏ hơn nhiều.', 1);
+
+-- ─────────────────────────────────────────────────────────────
+--  10. BẢNG LỊCH SỬ CHAT AI (ai_chat_history)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_chat_history (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT UNSIGNED NULL,                  -- NULL nếu là khách vãng lai
+    session_id  VARCHAR(64) NULL,                   -- Dành cho việc lưu session của khách vãng lai
+    sender      ENUM('user', 'bot') NOT NULL,       -- Người gửi (user hoặc bot)
+    message     TEXT NOT NULL,                      -- Nội dung tin nhắn
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id),
+    INDEX idx_session (session_id),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
