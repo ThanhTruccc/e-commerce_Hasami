@@ -18,11 +18,11 @@ if ($isLocal) {
     define('DB_PASS', ''); // Mật khẩu MySQL local từ README
     define('APP_ENV', 'development');
 } else {
-    // Cấu hình Production (InfinityFree)
-    define('DB_HOST', 'sql304.infinityfree.com');
-    define('DB_NAME', 'if0_41964624_hasami');
-    define('DB_USER', 'if0_41964624');
-    define('DB_PASS', 'cQ7ps7OJY0B');
+    // Cấu hình Production (Clever Cloud)
+    define('DB_HOST', 'b5neczaaiiqfemvyrzsw-mysql.services.clever-cloud.com');
+    define('DB_NAME', 'b5neczaaiiqfemvyrzsw');
+    define('DB_USER', 'utwz24rsr9daa4v2');
+    define('DB_PASS', 'XfEj0K5bhPkC76X0RHuL');
     define('APP_ENV', 'production');
 }
 
