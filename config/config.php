@@ -23,6 +23,7 @@ if ($isLocal) {
     define('DB_NAME', 'b5neczaaiiqfemvyrzsw');
     define('DB_USER', 'utwz24rsr9daa4v2');
     define('DB_PASS', 'XfEj0K5bhPkC76X0RHuL');
+    efine('DB_PORT', '3306');
     define('APP_ENV', 'production');
 }
 
