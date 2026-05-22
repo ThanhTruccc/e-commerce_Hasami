@@ -533,6 +533,48 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; }
 .btn-add-cart:hover { opacity: .9; transform: scale(1.02); color: white; }
 
 /* ── PRODUCT DETAIL ──────────────────────────────────────────── */
+.product-gallery {
+    margin-bottom: 20px;
+}
+.product-main-image {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: #ffffff;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+.product-main-image:hover {
+    box-shadow: var(--shadow);
+    border-color: var(--primary-light);
+}
+.main-product-img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    border-radius: var(--radius);
+}
+.product-main-image:hover .main-product-img {
+    transform: scale(1.03);
+}
+.detail-badge-sale {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--gradient);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(233, 30, 140, 0.35);
+    z-index: 10;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
 .product-detail-name   { font-size: 1.8rem; font-weight: 800; }
 .product-brand-detail  { color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: .85rem; }
 .detail-price-sale     { font-size: 2rem; font-weight: 800; color: var(--primary); }

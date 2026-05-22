@@ -38,7 +38,10 @@ class HomeController extends Controller {
 
             $productModel = $this->model('Product');
             $engine       = new RecommendationEngine($productModel->getDb());
-            $userId       = (int)($_SESSION['user_id'] ?? 0);
+            
+            $userAuth     = $_SESSION['user_auth'] ?? $_SESSION['admin_auth'] ?? null;
+            $userId       = (int)($userAuth['id'] ?? 0);
+            
             $results      = $engine->getRecommendations($userId, 0, $_SESSION['ai_filters']);
 
             $this->json(['success' => true, 'count' => count($results), 'products' => $results]);

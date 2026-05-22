@@ -95,7 +95,7 @@
                             <button type="submit" class="btn btn-add-cart-detail flex-fill">
                                 <i class="bi bi-bag-plus me-2"></i>Thêm vào giỏ
                             </button>
-                            <?php if (isset($_SESSION['user_id'])): ?>
+                            <?php if (isset($_SESSION['user_auth']) || isset($_SESSION['admin_auth'])): ?>
                             <button type="button" class="btn btn-wishlist-detail <?= $isWishlisted ? 'active' : '' ?>"
                                     onclick="toggleWishlist(<?= $product['id'] ?>, this)">
                                 <i class="bi <?= $isWishlisted ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
@@ -224,7 +224,7 @@
                             <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
                         </form>
                     </div>
-                    <?php elseif (!isset($_SESSION['user_id'])): ?>
+                    <?php elseif (!isset($_SESSION['user_auth']) && !isset($_SESSION['admin_auth'])): ?>
                     <div class="alert alert-info mt-3">
                         <a href="<?= APP_URL ?>/auth/login">Đăng nhập</a> để viết đánh giá.
                     </div>

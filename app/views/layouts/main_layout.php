@@ -218,6 +218,7 @@ if ($flash) {
     </div>
 </footer>
 
+    <?php if (!in_array($view, ['auth.login', 'auth.register'])): ?>
     <!-- AI Chat Consultant -->
     <div class="ai-chat-wrapper" id="aiChatWrapper">
         <div class="ai-chat-bubble" id="aiChatBubble" title="Tư vấn da với AI">
@@ -255,6 +256,7 @@ if ($flash) {
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -265,6 +267,8 @@ if ($flash) {
     </script>
     <!-- Custom JS -->
     <script src="<?= APP_URL ?>/js/main.js?v=<?= time() ?>"></script>
+    <?php if (!in_array($view, ['auth.login', 'auth.register'])): ?>
     <script src="<?= APP_URL ?>/js/ai-bot.js?v=<?= time() ?>"></script>
+    <?php endif; ?>
 </body>
 </html>

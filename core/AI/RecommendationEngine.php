@@ -36,17 +36,60 @@ class RecommendationEngine {
         $userProfile = $this->buildUserProfile($userId, $filters);
 
         // ── Chạy hai thuật toán song song ─────────────────────
-        $cbResults  = $this->cbf->recommend($userProfile, $currentProductId, AI_MAX_RECOMMENDATIONS);
-        $colfResults = $this->colf->recommend($userId, $currentProductId, AI_MAX_RECOMMENDATIONS);
+        // Lấy nhiều kết quả hơn (ví dụ: 50 sản phẩm) để có đủ tập mẫu cho việc lọc nghiêm ngặt
+        $cbResults   = $this->cbf->recommend($userProfile, $currentProductId, 50);
+        $colfResults = $this->colf->recommend($userId, $currentProductId, 50);
+
+        // ── Áp dụng bộ lọc nghiêm ngặt (Strict Filtering) ──
+        if (!empty($filters)) {
+            $strictFilter = function($p) use ($filters) {
+                // 1. Lọc theo Loại da
+                if (!empty($filters['skin_type'])) {
+                    $skinTypes = json_decode($p['skin_types'] ?? '[]', true);
+                    if (!is_array($skinTypes)) $skinTypes = [];
+                    if (!in_array($filters['skin_type'], $skinTypes) && !in_array('normal', $skinTypes)) {
+                        return false;
+                    }
+                }
+
+                // 2. Lọc theo Giá thực tế (sale_price nếu có, không thì price)
+                $price = (float)($p['sale_price'] ?: $p['price']);
+                if (isset($filters['price_min']) && $price < (float)$filters['price_min']) {
+                    return false;
+                }
+                if (isset($filters['price_max']) && $price > (float)$filters['price_max']) {
+                    return false;
+                }
+
+                // 3. Lọc theo Danh mục (khớp danh mục trực tiếp hoặc danh mục cha)
+                if (!empty($filters['category_id'])) {
+                    $prodCatId = (int)$p['category_id'];
+                    $prodParentCatId = (int)($p['parent_category_id'] ?? 0);
+                    $filterCatId = (int)$filters['category_id'];
+                    if ($prodCatId !== $filterCatId && $prodParentCatId !== $filterCatId) {
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+
+            $cbResults   = array_filter($cbResults, $strictFilter);
+            $colfResults = array_filter($colfResults, $strictFilter);
+        }
 
         // ── Kết hợp kết quả (Hybrid Fusion) ───────────────────
         $merged = $this->hybridFusion($cbResults, $colfResults);
 
-        // ── Loại trừ sản phẩm user đã mua ─────────────────────
-        if ($userId > 0) {
-            $purchased = $this->getPurchasedProductIds($userId);
-            $merged = array_filter($merged, fn($p) => !in_array((int)$p['id'], $purchased));
-        }
+        // ── Loại trừ sản phẩm user đã mua & sản phẩm đang xem ──
+        $purchased = $userId > 0 ? $this->getPurchasedProductIds($userId) : [];
+        
+        $merged = array_filter($merged, function($p) use ($purchased, $currentProductId) {
+            $pid = (int)$p['id'];
+            if ($currentProductId > 0 && $pid === $currentProductId) return false;
+            if (in_array($pid, $purchased)) return false;
+            return true;
+        });
 
         return array_values(array_slice($merged, 0, AI_MAX_RECOMMENDATIONS));
     }

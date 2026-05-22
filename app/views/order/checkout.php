@@ -162,5 +162,51 @@ document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
         }
     });
 });
+
+document.getElementById('verifyCoupon').addEventListener('click', function() {
+    const code = document.getElementById('couponCode').value.trim();
+    const statusDiv = document.getElementById('couponStatus');
+    const discountLine = document.getElementById('discountLine');
+    const discountShow = document.getElementById('discountShow');
+    const finalTotal = document.getElementById('finalTotal');
+    
+    let total = <?= $total ?>;
+    let shipping = total >= 300000 ? 0 : 30000;
+
+    if (!code) {
+        statusDiv.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Vui lòng nhập mã giảm giá</span>';
+        discountLine.classList.add('d-none');
+        finalTotal.textContent = new Intl.NumberFormat('vi-VN').format(total + shipping) + 'đ';
+        return;
+    }
+
+    statusDiv.innerHTML = '<span class="text-muted"><i class="spinner-border spinner-border-sm"></i> Đang kiểm tra...</span>';
+
+    fetch('<?= APP_URL ?>/order/verifyCoupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'code=' + encodeURIComponent(code)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.valid) {
+            statusDiv.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> Áp dụng thành công! Đã giảm ${new Intl.NumberFormat('vi-VN').format(data.discount)}đ</span>`;
+            discountLine.classList.remove('d-none');
+            discountShow.textContent = '-' + new Intl.NumberFormat('vi-VN').format(data.discount) + 'đ';
+            
+            let finalAmt = Math.max(0, total - data.discount) + shipping;
+            finalTotal.textContent = new Intl.NumberFormat('vi-VN').format(finalAmt) + 'đ';
+        } else {
+            statusDiv.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-x-circle"></i> ${data.message}</span>`;
+            discountLine.classList.add('d-none');
+            
+            let finalAmt = total + shipping;
+            finalTotal.textContent = new Intl.NumberFormat('vi-VN').format(finalAmt) + 'đ';
+        }
+    })
+    .catch(err => {
+        statusDiv.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Lỗi hệ thống, vui lòng thử lại sau.</span>';
+    });
+});
 </script>
 </body>

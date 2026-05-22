@@ -46,6 +46,10 @@ class OrderController extends Controller {
                 $couponId = $couponResult['coupon']['id'];
                 $discount = $couponResult['discount'];
                 $couponModel->use($couponId);
+            } else {
+                $this->setFlash('error', $couponResult['message']);
+                $this->redirect('order/checkout');
+                return;
             }
         }
 
@@ -76,16 +80,17 @@ class OrderController extends Controller {
 
         $cartModel->clearCart($userId);
         
-        // Gửi email xác nhận đặt hàng thành công kèm tư vấn loại da cá nhân hóa
-        require_once CORE_PATH . '/MailService.php';
-        $user = $this->model('User')->findById($userId);
-        MailService::sendOrderConfirmation($orderId, $user, $cartData['items'], $shipping, (float)$discount, $paymentMethod);
+        // (Yêu cầu) Đã bỏ chức năng gửi mail cho người dùng khi đặt hàng đi
+        // require_once CORE_PATH . '/MailService.php';
+        // $user = $this->model('User')->findById($userId);
+        // MailService::sendOrderConfirmation($orderId, $user, $cartData['items'], $shipping, (float)$discount, $paymentMethod);
         
         if ($paymentMethod === 'online') {
+            $order = $orderModel->findById($orderId);
             require_once CORE_PATH . '/Payment/VNPay.php';
             $paymentUrl = VNPay::createPaymentUrl([
                 'order_id' => $orderId,
-                'amount'   => $cartData['total']
+                'amount'   => $order['final_amount']
             ]);
             
             if ($paymentUrl) {
@@ -116,7 +121,9 @@ class OrderController extends Controller {
         $this->requireAuth();
         $order = $this->model('Order')->getDetail($orderId);
         $userAuth = $_SESSION['user_auth'] ?? $_SESSION['admin_auth'] ?? null;
-        if (!$order || (int)$order['user_id'] !== (int)$userAuth['id']) {
+        $isAdmin  = isset($_SESSION['admin_auth']);
+        
+        if (!$order || (!$isAdmin && (int)$order['user_id'] !== (int)$userAuth['id'])) {
             $this->redirect('order/history');
         }
         $this->view('order.detail', compact('order'));
@@ -165,7 +172,7 @@ class OrderController extends Controller {
         if ($isValid && $vnp_ResponseCode === '00') {
             $this->model('Order')->update($orderId, [
                 'payment_status' => 'paid',
-                'status' => 'processing' // Chuyển sang trạng thái Đang xử lý để Admin thấy
+                'status' => 'confirmed' // Chuyển sang trạng thái Đã xác nhận
             ]);
             $this->setFlash('success', 'Thanh toán đơn hàng #' . $orderId . ' thành công!');
         } else {
@@ -173,5 +180,37 @@ class OrderController extends Controller {
         }
 
         $this->redirect('order/detail/' . $orderId);
+    }
+
+    /**
+     * Xác thực mã giảm giá qua AJAX
+     */
+    public function verifyCoupon(): void {
+        header('Content-Type: application/json');
+        if (!$this->isPost()) {
+            echo json_encode(['valid' => false, 'message' => 'Yêu cầu không hợp lệ']);
+            return;
+        }
+
+        $code = trim($this->post('code', ''));
+        if (empty($code)) {
+            echo json_encode(['valid' => false, 'message' => 'Vui lòng nhập mã giảm giá']);
+            return;
+        }
+
+        $userAuth = $_SESSION['user_auth'] ?? $_SESSION['admin_auth'] ?? null;
+        if (!$userAuth) {
+            echo json_encode(['valid' => false, 'message' => 'Vui lòng đăng nhập']);
+            return;
+        }
+
+        $cartData = $this->model('Cart')->getTotal((int)$userAuth['id']);
+        if (empty($cartData['items'])) {
+             echo json_encode(['valid' => false, 'message' => 'Giỏ hàng trống']);
+             return;
+        }
+
+        $couponResult = $this->model('Coupon')->validateCode($code, $cartData['total']);
+        echo json_encode($couponResult);
     }
 }

@@ -95,9 +95,9 @@
                         <td>
                             <?php
                             $badgeColors = ['pending'=>'warning','confirmed'=>'info','shipping'=>'primary','delivered'=>'success','cancelled'=>'danger'];
-                            $bc = $badgeColors[$ord['status']] ?? 'secondary';
+                            $bc = $badgeColors[$ord['status'] ?? ''] ?? 'secondary';
                             ?>
-                            <span class="badge bg-<?= $bc ?>"><?= ORDER_STATUS[$ord['status']] ?></span>
+                            <span class="badge bg-<?= $bc ?>"><?= ORDER_STATUS[$ord['status'] ?? ''] ?? 'Không xác định' ?></span>
                         </td>
                         <td><?= date('d/m/Y H:i', strtotime($ord['ordered_at'])) ?></td>
                         <td>

@@ -9,7 +9,7 @@
     <div class="admin-card-body">
         <form action="<?= APP_URL ?>/admin/orders" method="GET" class="d-flex gap-2">
             <select name="status" class="form-select w-auto" onchange="this.form.submit()">
-                <option value="">Tall cả trạng thái</option>
+                <option value="">Tất cả trạng thái</option>
                 <?php foreach (ORDER_STATUS as $k => $v): ?>
                 <option value="<?= $k ?>" <?= ($status ?? '') === $k ? 'selected' : '' ?>><?= $v ?></option>
                 <?php endforeach; ?>
@@ -57,13 +57,17 @@
                         <td>
                             <?php
                             $badgeColors = ['pending'=>'warning','confirmed'=>'info','shipping'=>'primary','delivered'=>'success','cancelled'=>'danger'];
-                            $bc = $badgeColors[$ord['status']] ?? 'secondary';
+                            $bc = $badgeColors[$ord['status'] ?? ''] ?? 'secondary';
                             ?>
-                            <span class="badge bg-<?= $bc ?>"><?= ORDER_STATUS[$ord['status']] ?></span>
+                            <span class="badge bg-<?= $bc ?>"><?= ORDER_STATUS[$ord['status'] ?? ''] ?? 'Không xác định' ?></span>
                         </td>
                         <td><?= date('d/m/Y H:i', strtotime($ord['ordered_at'])) ?></td>
                         <td>
-                            <form action="<?= APP_URL ?>/admin/orderStatus/<?= $ord['id'] ?>" method="POST" class="d-flex gap-1">
+                            <div class="d-flex gap-2">
+                                <a href="<?= APP_URL ?>/admin/orderDetail/<?= $ord['id'] ?>" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form action="<?= APP_URL ?>/admin/orderStatus/<?= $ord['id'] ?>" method="POST" class="d-flex gap-1">
                                 <select name="status" class="form-select form-select-sm w-auto">
                                     <?php foreach (ORDER_STATUS as $k => $v): ?>
                                     <option value="<?= $k ?>" <?= $k === $ord['status'] ? 'selected' : '' ?>><?= $v ?></option>
@@ -71,6 +75,7 @@
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-primary">Lưu</button>
                             </form>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

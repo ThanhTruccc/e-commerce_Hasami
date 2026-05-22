@@ -98,6 +98,7 @@ class CollaborativeFilter {
             SELECT
                 p.*,
                 c.name AS category_name,
+                c.parent_id AS parent_category_id,
                 COUNT(*)                    AS co_count,
                 (
                     SELECT COUNT(DISTINCT order_id)
@@ -149,6 +150,7 @@ class CollaborativeFilter {
             SELECT
                 p.*,
                 c.name AS category_name,
+                c.parent_id AS parent_category_id,
                 SUM(ub_other.weight)  AS raw_score,
                 COUNT(DISTINCT ub_similar.user_id) AS user_count,
                 SUM(ub_other.weight) * COUNT(DISTINCT ub_similar.user_id) AS similarity_score
@@ -188,7 +190,7 @@ class CollaborativeFilter {
      */
     private function getTrending(int $limit): array {
         $sql = "
-            SELECT p.*, c.name AS category_name,
+            SELECT p.*, c.name AS category_name, c.parent_id AS parent_category_id,
                    (p.sold_count * 3 + p.view_count) AS trend_score
             FROM products p
             JOIN categories c ON p.category_id = c.id

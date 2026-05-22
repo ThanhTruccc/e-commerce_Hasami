@@ -53,7 +53,7 @@ define('DB_CHARSET', 'utf8mb4');
 
 // App
 define('APP_NAME', 'Hasami - Mỹ Phẩm Cao Cấp');
-define('GEMINI_API_KEY', 'AIzaSyB3oVYG4xOsdSC2SgcoFUeoTJqwZph8Ock'); // Thay thế bằng key của bạn
+define('GEMINI_API_KEY', 'AIzaSyC1UuuoNQr4sChh7lZZ0Pb1Tj0gI0BROWY'); // Thay thế bằng key của bạn
 define('APP_VERSION', '1.0.0');
 
 // Paths

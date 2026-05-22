@@ -109,6 +109,20 @@ class AdminController extends Controller {
         $this->redirect('admin/orders');
     }
 
+    public function orderDetail(int $id): void {
+        $this->requireAdmin();
+        $order = $this->model('Order')->getDetail($id);
+        if (!$order) {
+            $this->setFlash('error', 'Đơn hàng không tồn tại.');
+            $this->redirect('admin/orders');
+        }
+        
+        // Fetch user detail for order
+        $user = $this->model('User')->findById((int)$order['user_id']);
+        
+        $this->view('admin.order_detail', compact('order', 'user'));
+    }
+
     // ── Người dùng ───────────────────────────────────────────
 
     public function users(): void {
@@ -163,45 +177,4 @@ class AdminController extends Controller {
     }
 }
 
-// ── Review & Wishlist Controllers (nhỏ gọn) ─────────────────
-
-class ReviewController extends Controller {
-
-    public function add(int $productId): void {
-        $this->requireAuth();
-        if (!$this->isPost()) $this->redirect("product/detail/{$productId}");
-
-        $userAuth = $_SESSION['user_auth'] ?? $_SESSION['admin_auth'] ?? null;
-        $userId   = (int)$userAuth['id'];
-        $result = $this->model('Review')->addReview($userId, $productId, [
-            'rating'  => (int)$this->post('rating', 5),
-            'title'   => $this->post('title', ''),
-            'comment' => $this->post('comment', ''),
-        ]);
-
-        $this->setFlash($result ? 'success' : 'error',
-            $result ? 'Cảm ơn đánh giá của bạn!' : 'Bạn cần mua sản phẩm để đánh giá.');
-        $this->redirect("product/detail/{$productId}");
-    }
-}
-
-class WishlistController extends Controller {
-
-    public function toggle(): void {
-        $this->requireAuth();
-        $productId = (int)$this->post('product_id', 0);
-        $userAuth  = $_SESSION['user_auth'] ?? $_SESSION['admin_auth'] ?? null;
-        $userId    = (int)($userAuth['id'] ?? 0);
-        $action    = $this->model('Wishlist')->toggle($userId, $productId);
-        $count     = $this->model('Wishlist')->getCount($userId);
-        $this->json(['success' => true, 'action' => $action, 'count' => $count]);
-    }
-
-    public function index(): void {
-        $this->requireAuth();
-        $userAuth  = $_SESSION['user_auth'] ?? $_SESSION['admin_auth'] ?? null;
-        $userId    = (int)($userAuth['id'] ?? 0);
-        $products = $this->model('Wishlist')->getByUser($userId);
-        $this->view('wishlist.index', compact('products'));
-    }
-}
+// Removed inline ReviewController and WishlistController to their own files.

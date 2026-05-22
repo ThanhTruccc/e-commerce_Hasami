@@ -109,7 +109,20 @@ class Order extends Model {
     }
 
     public function updateStatus(int $id, string $status): bool {
-        return $this->update($id, ['status' => $status]);
+        $data = ['status' => $status];
+
+        // COD: Khi giao hàng thành công → tự động chuyển payment_status = 'paid' (Đã thu tiền)
+        // Ngược lại nếu huỷ hoặc quay về trạng thái trước → chuyển lại 'unpaid'
+        $order = $this->findById($id);
+        if ($order && strtolower($order['payment_method']) === 'cod') {
+            if ($status === 'delivered') {
+                $data['payment_status'] = 'paid';
+            } elseif ($status === 'cancelled') {
+                $data['payment_status'] = 'unpaid';
+            }
+        }
+
+        return $this->update($id, $data);
     }
 }
 

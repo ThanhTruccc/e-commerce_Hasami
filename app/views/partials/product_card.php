@@ -4,7 +4,7 @@ $displayPrice = $product['sale_price'] ?? $product['price'];
 $hasDiscount  = !empty($product['sale_price']) && $product['sale_price'] < $product['price'];
 $discountPct  = $hasDiscount ? round((1 - $product['sale_price'] / $product['price']) * 100) : 0;
 $avgRating    = round($product['avg_rating'] ?? 0, 1);
-$isWl         = isset($_SESSION['user_id']) && isset($wishlistIds) && in_array($product['id'], $wishlistIds);
+$isWl         = (isset($_SESSION['user_auth']) || isset($_SESSION['admin_auth'])) && isset($wishlistIds) && in_array($product['id'], $wishlistIds);
 ?>
 <div class="product-card" data-product-id="<?= $product['id'] ?>">
     <div class="product-img-wrap">
@@ -26,7 +26,7 @@ $isWl         = isset($_SESSION['user_id']) && isset($wishlistIds) && in_array($
         <?php endif; ?>
 
         <div class="product-actions">
-            <?php if (isset($_SESSION['user_id'])): ?>
+            <?php if (isset($_SESSION['user_auth']) || isset($_SESSION['admin_auth'])): ?>
             <button class="btn-wishlist <?= $isWl ? 'active' : '' ?>"
                     onclick="toggleWishlist(<?= $product['id'] ?>, this)"
                     title="<?= $isWl ? 'Bỏ yêu thích' : 'Yêu thích' ?>">

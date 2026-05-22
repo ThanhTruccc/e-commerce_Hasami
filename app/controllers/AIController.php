@@ -133,30 +133,17 @@ class AIController extends Controller {
             $userContextStr = "THÔNG TIN KHÁCH HÀNG:\n- Khách vãng lai (Chưa đăng nhập tài khoản hệ thống).";
         }
 
-        // 2. Lấy toàn bộ danh mục sản phẩm đang hoạt động của hệ thống
+        // 2. Lấy danh mục sản phẩm (rút gọn để tiết kiệm token)
         $productModel = $this->model('Product');
         $db = $productModel->getDb();
-        $stmt = $db->query("SELECT id, name, brand, price, sale_price, skin_types, description, ingredients, usage_guide FROM products WHERE status = 'active'");
+        $stmt = $db->query("SELECT id, name, brand, price, sale_price, skin_types, ingredients FROM products WHERE status = 'active'");
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $catalogStr = "\nDANH MỤC SẢN PHẨM HIỆN CÓ TẠI CỬA HÀNG HASAMI:\n";
+        $catalogStr = "\nSẢN PHẨM HASAMI:\n";
         foreach ($products as $p) {
-            $skins = json_decode($p['skin_types'] ?? '[]', true);
-            $skinLabels = [];
-            foreach ($skins as $sk) {
-                $skinLabels[] = SKIN_TYPES[$sk] ?? $sk;
-            }
-            $skinsStr = implode(', ', $skinLabels);
-            $priceText = number_format($p['price'], 0, ',', '.') . 'đ';
-            if (!empty($p['sale_price'])) {
-                $priceText = number_format($p['sale_price'], 0, ',', '.') . 'đ (Đang giảm giá từ ' . number_format($p['price'], 0, ',', '.') . 'đ)';
-            }
-            $catalogStr .= "- **[Sản phẩm ID: {$p['id']}]** {$p['name']} (Thương hiệu: {$p['brand']})\n";
-            $catalogStr .= "  + Giá bán: {$priceText}\n";
-            $catalogStr .= "  + Loại da phù hợp: {$skinsStr}\n";
-            $catalogStr .= "  + Hoạt chất & Thành phần: {$p['ingredients']}\n";
-            $catalogStr .= "  + Công dụng & Mô tả: {$p['description']}\n";
-            $catalogStr .= "  + Hướng dẫn sử dụng: " . ($p['usage_guide'] ?? 'Thoa đều lên vùng da cần chăm sóc.') . "\n\n";
+            $skins = implode(',', json_decode($p['skin_types'] ?? '[]', true));
+            $price = !empty($p['sale_price']) ? number_format($p['sale_price'],0,',','.') . 'đ(KM)' : number_format($p['price'],0,',','.') . 'đ';
+            $catalogStr .= "#{$p['id']} {$p['name']}|{$p['brand']}|{$price}|Da:{$skins}|TC:{$p['ingredients']}\n";
         }
 
         return $userContextStr . "\n" . $catalogStr;
@@ -164,40 +151,26 @@ class AIController extends Controller {
 
     private function generateAIResponse($msg, $context) {
         $apiKey = GEMINI_API_KEY;
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
 
-        // Xây dựng System Prompt cực kỳ chuyên nghiệp, học thuật và chi tiết
-        $systemPrompt = "Bạn là PGS.TS. Bác sĩ Da liễu, chuyên gia tư vấn cao cấp của hệ thống mỹ phẩm thuần Việt Hasami. Bạn có hơn 15 năm kinh nghiệm lâm sàng và nghiên cứu chuyên sâu về các bệnh lý cũng như cơ chế sinh học của làn da người Việt.
+        $models = [
+            'gemini-2.5-flash',
+            'gemini-2.5-flash-lite',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash'
+        ];
 
-Dưới đây là thông tin về khách hàng đang trò chuyện với bạn và danh mục sản phẩm thực tế có sẵn tại cửa hàng Hasami:
-==================================
+        // System Prompt rút gọn để tiết kiệm token
+        $systemPrompt = "Bạn là Bác sĩ Da liễu tư vấn cho cửa hàng mỹ phẩm Hasami. Trả lời ngắn gọn, khoa học, dùng Markdown.
+
+Dữ liệu:
 $context
-==================================
 
-Hãy tuân thủ nghiêm ngặt các quy tắc ứng xử và nghiệp vụ chuyên gia sau đây:
-
-1. PHONG CÁCH XƯNG HÔ VÀ THÁI ĐỘ:
-   - Xưng hô là 'Bác sĩ' hoặc 'Mình', gọi người dùng là 'Bạn' hoặc 'Khách hàng'. Luôn thể hiện thái độ ân cần, lắng nghe, thấu hiểu sâu sắc, và tôn trọng tuyệt đối.
-   - Sử dụng ngôn từ tinh tế, khoa học nhưng vẫn dễ hiểu đối với người tiêu dùng phổ thông. Tránh cách nói sáo rỗng hoặc mang tính quảng cáo lộ liễu.
-
-2. TƯ VẤN Y KHOA VÀ CƠ CHẾ SINH HỌC:
-   - Khi nhận dạng được loại da hoặc vấn đề da của khách hàng (hoặc dựa vào thông tin loại da trong context nếu có), hãy giải thích ngắn gọn, súc tích về cơ chế sinh lý của loại da đó (ví dụ: tại sao da dầu lại dễ bít tắc lỗ chân lông, tại sao da khô lại thiếu hụt lipid rào cản, v.v.).
-   - Khuyên dùng các phác đồ chăm sóc da khoa học gồm các bước cốt lõi: Làm sạch -> Cân bằng -> Điều trị chuyên sâu -> Dưỡng ẩm -> Bảo vệ.
-
-3. GỢI Ý SẢN PHẨM CHÍNH XÁC TỪ CỬA HÀNG:
-   - CHỈ ĐƯỢC PHÉP gợi ý các sản phẩm thực tế ĐANG CÓ TRONG DANH MỤC SẢN PHẨM của Hasami (đã cung cấp ở trên). TUYỆT ĐỐI KHÔNG tự bịa ra sản phẩm hoặc giới thiệu các sản phẩm của bên thứ ba không có trong danh mục.
-   - Khi gợi ý sản phẩm nào, hãy nêu rõ Tên sản phẩm, Thương hiệu, và phân tích chi tiết vì sao các HOẠT CHẤT (như Salicylic Acid, Niacinamide, Hyaluronic Acid, Ceramide...) có trong sản phẩm đó lại giải quyết được vấn đề da của họ.
-   - Ghi rõ Giá bán (hoặc giá khuyến mãi nếu có) và khuyên họ thêm vào giỏ hàng hoặc tiến hành thanh toán nếu sản phẩm đó phù hợp.
-
-4. HỖ TRỢ XỬ LÝ ĐƠN HÀNG VÀ GIỎ HÀNG:
-   - Nếu khách hàng hỏi về giỏ hàng hoặc đơn hàng của họ, hãy dựa vào thông tin trong phần context để giải đáp một cách chu đáo, tận tình (ví dụ: xác nhận đơn hàng đang ở trạng thái nào, hỗ trợ khách hàng cách thức thanh toán online qua VNPay hoặc COD).
-
-5. ĐỊNH DẠNG CÂU TRẢ LỜI (MARKDOWN):
-   - Trình bày câu trả lời của bạn một cách rõ ràng, trực quan, chuyên nghiệp bằng cách sử dụng các thẻ Markdown: tiêu đề lớn (###), danh sách gạch đầu dòng, chữ in đậm cho các hoạt chất quan trọng.
-   - Chia câu trả lời thành 3 phần rõ rệt:
-     * Chẩn Đoán & Phân Tích Da (Giải thích cơ chế)
-     * Liệu Trình & Gợi Ý Sản Phẩm Phù Hợp (Phân tích hoạt chất, giá bán cụ thể của sản phẩm thuộc Hasami)
-     * Hướng Dẫn Sử Dụng & Lời Khuyên Y Khoa (Tần suất, thứ tự bôi, lưu ý khi ra nắng...)";
+Quy tắc:
+- Xưng 'Bác sĩ', gọi khách 'Bạn'. Giọng ân cần, chuyên nghiệp.
+- CHỈ gợi ý sản phẩm CÓ TRONG danh mục trên. KHÔNG bịa sản phẩm.
+- Khi gợi ý: nêu tên, giá, phân tích hoạt chất phù hợp loại da.
+- Hỗ trợ giỏ hàng/đơn hàng dựa trên context.
+- Trả lời 2-3 đoạn: Phân tích da → Gợi ý sản phẩm → Hướng dẫn sử dụng.";
 
         $data = [
             "contents" => [
@@ -213,29 +186,43 @@ Hãy tuân thủ nghiêm ngặt các quy tắc ứng xử và nghiệp vụ chuy
             ]
         ];
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $payload = json_encode($data);
 
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
+        foreach ($models as $model) {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
 
-        if ($error) {
-            return "Xin lỗi bạn, Bác sĩ đang gặp một chút sự cố về đường truyền kết nối dữ liệu. Bạn vui lòng gửi lại câu hỏi sau ít phút nhé. Chúc bạn một ngày tốt lành!";
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10); // set timeout for each try
+
+            $response = curl_exec($ch);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($error) {
+                // If there's a network/timeout error with this model, try the next one
+                continue;
+            }
+
+            $result = json_decode($response, true);
+            
+            // Check if there is an error in response (e.g. key expired, quota limit, model overloaded)
+            if (isset($result['error'])) {
+                continue;
+            }
+
+            $reply = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            if ($reply) {
+                return $reply;
+            }
         }
 
-        $result = json_decode($response, true);
-        $reply = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-        if (!$reply) {
-            return "Chào bạn, Bác sĩ đã nhận được câu hỏi từ bạn. Hiện tại hệ thống phân tích da đang quá tải. Với làn da của bạn, lời khuyên chung là hãy chú trọng làm sạch dịu nhẹ và duy trì độ ẩm đầy đủ hằng ngày để củng cố hàng rào bảo vệ da nhé.";
-        }
-
-        return $reply;
+        // Nếu tất cả các mô hình đều thất bại hoặc có lỗi hệ thống
+        return "Chào bạn, Bác sĩ đã nhận được câu hỏi từ bạn. Hiện tại hệ thống phân tích da đang quá tải. Với làn da của bạn, lời khuyên chung là hãy chú trọng làm sạch dịu nhẹ và duy trì độ ẩm đầy đủ hằng ngày để củng cố hàng rào bảo vệ da nhé.";
     }
 }
 

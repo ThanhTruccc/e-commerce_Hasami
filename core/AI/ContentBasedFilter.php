@@ -36,7 +36,7 @@ class ContentBasedFilter {
      */
     public function recommend(array $userProfile, int $excludeId = 0, int $limit = 6): array {
         // Lấy tất cả sản phẩm active
-        $sql = "SELECT p.*, c.name AS category_name
+        $sql = "SELECT p.*, c.name AS category_name, c.parent_id AS parent_category_id
                 FROM products p
                 JOIN categories c ON p.category_id = c.id
                 WHERE p.status = 'active'";
